@@ -9,9 +9,20 @@ logger = logging.getLogger(__name__)
 # Cada clase es un modelo (tabla en la base de datos)
 class Presupuesto(models.Model):
     _name = "presupuesto"
+    _description = "Presupuesto de Películas"
     _inherit = ['image.mixin'] # Modelo para imagenes
 
-    name = fields.Char(string='Pelicula') #caracteristica especiales
+    @api.depends('detalle_ids') #para que con cada cambio se ejecute _compute_total
+    def _compute_total(self):
+        for record in self:
+            sub_total = 0
+            for linea in record.detalle_ids:
+                sub_total += linea.importe
+            record.base = sub_total
+            record.impuestos = record.base * 0.19
+            record.total = record.base * 1.19
+
+    name = fields.Char(string='Pelicula') # name tiene caracteristica especiales
     clasificacion = fields.Selection(selection=[
         ('G', 'G'),
         ('PG', 'PG'),
@@ -52,13 +63,19 @@ class Presupuesto(models.Model):
     )
 
     opinion = fields.Html(string='Opinion')
-
     detalle_ids = fields.One2many( # una cabecera puede tener muchos detalles
         comodel_name='presupuesto.detalle', 
         inverse_name='presupuesto_id', # nombre del campo que relaciona el detalle con la cabecera
         string='Detalles',
     )
 
+    campos_ocultos = fields.Boolean(string='Ver Campos ocultos', default=False)
+
+    currency_id = fields.Many2one(
+        comodel_name='res.currency',
+        string='Moneda',
+        default=lambda self: self.env.company.currency_id.id,
+    )
 
     genero_ids = fields.Many2many(
         comodel_name='genero',
@@ -83,6 +100,12 @@ class Presupuesto(models.Model):
 
     fch_creacion = fields.Datetime(string='Fecha de creación', copy=False, default=lambda self: fields.Datetime.now())
 
+
+    terminos = fields.Text(string='Terminos y condiciones')
+    base = fields.Monetary(string='Base imponible', compute='_compute_total')
+    impuestos = fields.Monetary(string = 'Impuestos', compute='_compute_total')
+    total = fields.Monetary(string='Total', compute='_compute_total')
+
     def aprobar_presupuesto(self):
         logger.info('\n********************* Presupuesto aprobado *********************\n')
         self.state = 'aprobado'
@@ -99,13 +122,14 @@ class Presupuesto(models.Model):
                 raise UserError('No se puede eliminar un presupuesto que no está en estado cancelado')
         return super(Presupuesto, self).unlink()
         
-    @api.model
-    def create(self, variables):
-        logger.info('\n******************* CREATE Variables: {0}.'.format(variables))
-        sequence_obj = self.env['ir.sequence']
-        correlativo = sequence_obj.next_by_code('secuencia.presupuesto.pelicula') 
-        variables['num_presupuesto'] = correlativo
-        return super(Presupuesto, self).create(variables)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            sequence_obj = self.env['ir.sequence']
+            correlativo = sequence_obj.next_by_code('secuencia.presupuesto.pelicula')
+            vals['num_presupuesto'] = correlativo
+            logger.info('\n******************* CREATE Variables: {0}.'.format(vals))
+        return super(Presupuesto, self).create(vals_list)
     
     def write(self, variables):
         logger.info('\n******************* WRITE Variables: {0}.'.format(variables))
@@ -139,6 +163,7 @@ class Presupuesto(models.Model):
         
 class PresupuestoDetalle(models.Model):
     _name = "presupuesto.detalle"
+    _description = "Detalle de Presupuesto de Películas"
 
     presupuesto_id = fields.Many2one( #Muchos detalles pertenecen a un presupuesto
         comodel_name='presupuesto', #relacion con el primer modelo: presupuesto
@@ -159,4 +184,22 @@ class PresupuestoDetalle(models.Model):
     imagen = fields.Binary(string='Imagen', related='name.imagen')
     cantidad = fields.Integer(string='Cantidad', default=1.0)
     precio = fields.Float(string='Precio', digits='Product Price')
-    importe = fields.Float(string='Importe')
+    importe = fields.Monetary(string='Importe')
+    
+    #siempre debe llamarse currency_id
+    currency_id = fields.Many2one(
+        comodel_name='res.currency',
+        string='Moneda',
+        related='presupuesto_id.currency_id'
+        )
+
+    @api.onchange('name')
+    def _onchange_name(self):
+        if self.name:
+            self.precio = self.name.precio
+
+    @api.onchange('cantidad', 'precio')
+    def _onchange_cantidad_precio(self):
+        if self.cantidad and self.precio:
+            self.importe = self.cantidad * self.precio
+

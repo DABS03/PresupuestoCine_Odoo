@@ -13,4 +13,4 @@ class RecursoCinematograficos(models.Model):
         domain="[('is_company', '=', False)]"
     )
     
-    imagen = fields.Binary(string = 'Imagen') # Tambien se puede usar para imagenes ademas de image.mixin
+    imagen = fields.Binary(string = 'Imagen', attachment=True) # Tambien se puede usar para imagenes ademas de image.mixin
