@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="action_open_presupuesto" model="ir.actions.act_window">
+        <field name="name">Presupuesto</field>
+        <field name="res_model">presupuesto</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_open_recurso_cinematografico" model="ir.actions.act_window">
+        <field name="name">Recurso Cinematograficos</field>
+        <field name="res_model">recurso.cinematografico</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+    <menuitem id="menu_principal" name="Peliculas"/>
+    <menuitem id="menu_horizontal"  name="Mis Modelos" parent="menu_principal"/>S
+    <menuitem id="menu_vertical_presupuesto" name="Presupuesto" parent="menu_horizontal" action="action_open_presupuesto"/>
+    <menuitem id="menu_vertical_recurso_cinematografico" name="Recurso Cinematografico" parent="menu_horizontal" action="action_open_recurso_cinematografico"/>
+
+
+</odoo>
