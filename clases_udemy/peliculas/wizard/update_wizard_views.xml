@@ -10,6 +10,10 @@
                         <field name="name" />
                     </group>
                 </sheet>
+                <footer>
+                    <button string="Actualizar" class="oe_highlight" type="object" name="update_vista_general"/>
+                    <button string="Cancelar" special="cancel"/>
+                </footer>
             </form>
         </field>
     </record>

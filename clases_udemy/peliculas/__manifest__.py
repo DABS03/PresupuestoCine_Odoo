@@ -4,7 +4,7 @@
     'name': 'Peliculas',
     'version': '1.0',
     'depends': [
-        'contacts'
+        'contacts',
         ], # modulo base de Odoo
     'author': 'Diego Burgos',
     'category': 'Peliculas',
@@ -18,6 +18,7 @@
         'data/categoria.xml',
         'data/secuencia.xml',
         'wizard/update_wizard_views.xml',
+        'report/recorte_peliculas.xml',
         'views/presupuesto_views.xml',
         'views/menu.xml',
     ],

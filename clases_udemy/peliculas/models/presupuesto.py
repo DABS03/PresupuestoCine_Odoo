@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class Presupuesto(models.Model):
     _name = "presupuesto"
     _description = "Presupuesto de Películas"
-    _inherit = ['image.mixin'] # Modelo para imagenes
+    _inherit = ['mail.thread','mail.activity.mixin','image.mixin'] # Modelo para imagenes
 
     @api.depends('detalle_ids') #para que con cada cambio se ejecute _compute_total al modifica de detalle_ids
     def _compute_total(self):
