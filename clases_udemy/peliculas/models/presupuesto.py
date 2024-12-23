@@ -12,7 +12,7 @@ class Presupuesto(models.Model):
     _description = "Presupuesto de Películas"
     _inherit = ['image.mixin'] # Modelo para imagenes
 
-    @api.depends('detalle_ids') #para que con cada cambio se ejecute _compute_total
+    @api.depends('detalle_ids') #para que con cada cambio se ejecute _compute_total al modifica de detalle_ids
     def _compute_total(self):
         for record in self:
             sub_total = 0
@@ -97,14 +97,24 @@ class Presupuesto(models.Model):
 
     fch_aprobado = fields.Date(string='Fecha de aprobacion', copy=False)
     num_presupuesto = fields.Char(string = 'Numero de presupuesto', copy=False)
-
     fch_creacion = fields.Datetime(string='Fecha de creación', copy=False, default=lambda self: fields.Datetime.now())
 
 
     terminos = fields.Text(string='Terminos y condiciones')
-    base = fields.Monetary(string='Base imponible', compute='_compute_total')
-    impuestos = fields.Monetary(string = 'Impuestos', compute='_compute_total')
-    total = fields.Monetary(string='Total', compute='_compute_total')
+    base = fields.Monetary(
+        string='Base imponible',
+        compute='_compute_total'
+    )
+    
+    impuestos = fields.Monetary(
+        string='Impuestos',
+        compute='_compute_total'
+    )
+    
+    total = fields.Monetary(
+        string='Total',
+        compute='_compute_total'
+    )
 
     def aprobar_presupuesto(self):
         logger.info('\n********************* Presupuesto aprobado *********************\n')
